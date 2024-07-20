@@ -1,0 +1,32 @@
+const User = require("../model/user");
+const { createSecretToken } = require("../utils/SecretToken");
+const bcrypt = require("bcryptjs");
+module.exports.rendersignup=(req,res)=>{
+    res.render('signup');
+}
+
+module.exports.Signup = async (req, res, next) => {
+    console.log("iam here")
+  try {
+    const { email, password, username, createdAt } = req.body;
+    console.log(email,password)
+    console.log("how are you")
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.json({ message: "User already exists" });
+    }
+    const user = await User.create({ email, password, username, createdAt });
+    console.log(user)
+    const token = createSecretToken(user._id);
+    res.cookie("token", token, {
+      withCredentials: true,
+      httpOnly: false,
+    });
+    res
+      .status(201)
+      .json({ message: "User signed in successfully", success: true, user });
+    next();
+  } catch (error) {
+    console.error(error);
+  }
+};
